@@ -1,0 +1,52 @@
+## Create the folder for the procjet, download the file and unzipe
+
+if(!file.exists("courseproject")){dir.create("courseproject")}
+setwd("./courseproject")  # se place dans le repertoire contenant les fichiers a lire 
+fileUrl <- "http://d396qusza40orc.cloudfront.net/getdata%2Fprojectfiles%2FUCI%20HAR%20Dataset.zip" 
+fileLocal <- "Dataset.zip"
+download.file(fileUrl, destfile = fileLocal)
+unzip(fileLocal) ## unzip the content of the file ziped
+
+
+## 1) read and modify the data in the 'Train' folder
+
+setwd("./UCI HAR Dataset")
+setwd("./train")
+library(plyr)
+x_train = read.table("X_train.txt", fill=TRUE, header=FALSE) ## 7352 Obs of 561 variables (measurement of feature)
+y_train = read.table("Y_train.txt",fill=TRUE, header=FALSE)  ## 7352 Obs of 1 variable (activity)
+y_train <- rename(y_train, c("V1" = "activityCode_train")) ## rename the columns V1 in the 'y_train' file 
+subject_train = read.table("subject_train.txt",fill=TRUE, header=FALSE) ## 7352 Obs of 1 variable (subject id)
+subject_train <- rename(subject_train, c("V1" = "subjectId_train"))## rename the columns V1 in the 'subject_train' file 
+## make fusion of files from 'train' folder and create a table 'TableTrain' with an identifiant 'id'
+df1 = data.frame(id=sample(1:7352),x_train)
+df2 = data.frame(id=sample(1:7352),y_train)
+df3 = data.frame(id=sample(1:7352),subject_train)
+dfList1 = list(df1,df2,df3)
+TableTrain <- join_all(dfList1) ## create a table 7352 Obs with 564 variables (id+V1:V561+activityCode_train+subjectId_train)
+View(TableTrain)
+
+## 2) read and modify the data in the 'Test' folder
+
+setwd("../")
+setwd("./test")
+library(plyr)
+x_test = read.table("X_test.txt",fill=TRUE, header=FALSE)
+y_test = read.table("Y_test.txt",fill=TRUE, header=FALSE)
+y_test <- rename(y_test, c("V1" = "activityCode_test"))## rename the columns V1 in the 'y_test' file 
+subject_test = read.table("subject_test.txt",fill=TRUE, header=FALSE)
+subject_test <- rename(subject_test, c("V1" = "subjectId_test"))## rename the columns V1 in the 'subject_test' file
+
+## make fusion of files from 'test' folder and create a table 'TableTest' with an identifiant 'id'
+df4 = data.frame(id=sample(1:2947),x_test)
+df5 = data.frame(id=sample(1:2947),y_test)
+df6 = data.frame(id=sample(1:2947),subject_test)
+dfList2 = list(df4,df5,df6)
+TableTest <- join_all(dfList2)# creer une table 2947 Obs of 564 variables (id+V1:V561+activityCode_test+subjectId_test)
+View(TableTrain)
+
+## 3) merge the 2 tables 'TableTrain' and 'TableTest' in one table 'FusionTrainTest'
+
+FusionTrainTest <- rbind.fill(TableTrain,TableTest)## create a table of 10299 Obs with 564 va
+View(FusionTrainTest)
+write.table(FusionTrainTest, file = "FTT.txt", append = FALSE, quote = FALSE, sep = "\t", na = "-", row.names = FALSE)
